@@ -1,4 +1,4 @@
-import type { UserPayload } from "./user";
+import type { UserPayload } from "./user.js";
 
 type AuthRequest = Request & {
 	user?: UserPayload;

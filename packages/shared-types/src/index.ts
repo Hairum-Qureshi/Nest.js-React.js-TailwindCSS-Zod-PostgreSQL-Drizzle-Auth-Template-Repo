@@ -1,3 +1,3 @@
-export type { UserPayload } from "./types/user";
-export type { AuthRequest } from "./types/auth";
-export type { UseGoogleAuthHook } from "./hooks/useGoogleAuth";
+export type { UserPayload } from "./types/user.js";
+export type { AuthRequest } from "./types/auth.js";
+export type { UseGoogleAuthHook } from "./hooks/useGoogleAuth.js";
