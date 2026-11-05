@@ -1,4 +1,4 @@
-import type { UserPayload } from "./user.js";
+import type { UserPayload } from "../schemas/user.schema.ts";
 
 type AuthRequest = Request & {
 	user?: UserPayload;
