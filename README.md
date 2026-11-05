@@ -1,8 +1,10 @@
-# NestJS + React + Vite + Tailwind + Turbo (with Google Auth)
+# NestJS + React + Vite + Tailwind + Zod + Turbo (with Google Auth)
 
-This repository is a **full-stack monorepo template** using **npm workspaces** and **Turborepo** to manage a React frontend and a NestJS backend in a single repository.
+This repository is a **basic full-stack monorepo starter** using **npm workspaces** and **Turborepo** to manage a React frontend and a NestJS backend in a single repository. It is intended to give you a simple setup to get started, not a fully featured or production-ready application.
 
 It is based on a minimal monorepo foundation, with **Google OAuth authentication pre-wired using Google Cloud OAuth credentials** so you do not have to build the authentication plumbing from scratch. The backend is configured to use **PostgreSQL via NeonDB** with **Drizzle ORM** instead of a NoSQL database.
+
+It also includes a basic **Zod** setup in `packages/shared-types/src` so schemas and inferred types can be shared between the frontend and backend.
 
 This is a **template**, not a production-ready system.
 
@@ -12,37 +14,37 @@ This is a **template**, not a production-ready system.
 
 This template provides:
 
-* A correct, minimal **monorepo setup**
-* Clear separation of frontend and backend concerns
-* Centralized dependency management
-* Coordinated development scripts
-* **Google OAuth authentication across the frontend and backend**
-* JWT-based authentication for authenticated backend requests
-* A shared `@repo/shared-types` package so the frontend and backend can consume the same TypeScript types instead of duplicating them
-* **PostgreSQL + NeonDB persistence** using **Drizzle ORM**
+- A correct, minimal **monorepo setup**
+- Clear separation of frontend and backend concerns
+- Centralized dependency management
+- Coordinated development scripts
+- **Google OAuth authentication across the frontend and backend**
+- JWT-based authentication for authenticated backend requests
+- A shared `@repo/shared-types` package for Zod schemas and TypeScript types, so the frontend and backend can reuse validation rules and types instead of duplicating them
+- **PostgreSQL + NeonDB persistence** using **Drizzle ORM**
 
 Authentication is included, but only to the extent required to:
 
-* Sign users in with Google on the frontend
-* Send the Google authentication credential to the backend
-* Verify the Google identity on the backend
-* Establish an authenticated session using a backend-issued JWT
+- Sign users in with Google on the frontend
+- Send the Google authentication credential to the backend
+- Verify the Google identity on the backend
+- Establish an authenticated session using a backend-issued JWT
 
 Everything else remains intentionally unopinionated.
 
 ---
 
-## What This Template Is *Not*
+## What This Template Is _Not_
 
 This template does **not** try to be a full application starter.
 
 It does **not** include:
 
-* User roles or permissions
-* Auth-based authorization rules
-* API clients
-* Deployment, Docker, or CI/CD
-* Production session-management infrastructure
+- User roles or permissions
+- Auth-based authorization rules
+- API clients
+- Deployment, Docker, or CI/CD
+- Production session-management infrastructure
 
 Those decisions are left to the user.
 
@@ -58,9 +60,10 @@ Those decisions are left to the user.
 ├── packages/
 │   └── shared-types/     # @repo/shared-types - shared TypeScript types for frontend/backend
 │       └── src/
-│           ├── types/    # Domain types (e.g. UserPayload, AuthRequest)
+│           ├── schemas/  # Shared Zod schemas (e.g. UserPayloadSchema)
+│           ├── types/    # Shared domain types (e.g. AuthRequest)
 │           ├── hooks/    # Hook return/prop types (e.g. UseGoogleAuthHook)
-│           └── index.ts  # Re-exports shared types
+│           └── index.ts  # Re-exports shared schemas and types
 ├── package.json          # Root workspace + Turbo configuration
 ├── package-lock.json     # Single lockfile for the entire monorepo
 ├── turbo.json            # Turbo task pipeline
@@ -69,12 +72,13 @@ Those decisions are left to the user.
 
 ### Key Structural Notes
 
-* This **is a monorepo**
-* Dependency management is centralized at the **root**
-* Each app remains a **standalone project**
-* Shared TypeScript types live in `packages/shared-types` and are consumed via `@repo/shared-types`
-* New shared types should be added under `packages/shared-types/src`, organized into folders by kind and re-exported from `packages/shared-types/src/index.ts`
-* The `packages/` folder is intentionally included so shared logic, schemas, or types can be introduced later without duplicating code across apps
+- This **is a monorepo**
+- Dependency management is centralized at the **root**
+- Each app remains a **standalone project**
+- Shared TypeScript types live in `packages/shared-types` and are consumed via `@repo/shared-types`
+- Shared Zod schemas and their inferred types live under `packages/shared-types/src/schemas`; export them from `packages/shared-types/src/index.ts` so both apps can consume them through `@repo/shared-types`
+- New shared types should be added under `packages/shared-types/src`, organized into folders by kind and re-exported from `packages/shared-types/src/index.ts`
+- The `packages/` folder is intentionally included so shared logic, schemas, or types can be introduced later without duplicating code across apps
 
 ---
 
@@ -82,30 +86,45 @@ Those decisions are left to the user.
 
 ### Backend (`apps/backend`)
 
-* NestJS
-* TypeScript
-* PostgreSQL
-* NeonDB
-* Google OAuth
-* JWT-based session tokens
-* Drizzle ORM
+- NestJS
+- TypeScript
+- PostgreSQL
+- NeonDB
+- Google OAuth
+- JWT-based session tokens
+- Drizzle ORM
 
 ### Frontend (`apps/frontend`)
 
-* React
-* Vite
-* TailwindCSS
-* TypeScript
-* Google OAuth
+- React
+- Vite
+- TailwindCSS
+- TypeScript
+- Google OAuth
 
 ### Shared (`packages/shared-types`)
 
-* TypeScript types shared between the frontend and backend, consumed as `@repo/shared-types`
+- Zod schemas and TypeScript types shared between the frontend and backend, consumed as `@repo/shared-types`
+- `drizzle-zod` is included in the backend dependencies as an optional utility; the current shared schema is defined directly with Zod
+
+### Shared Validation with Zod
+
+The basic validation setup uses **Zod**, with shared schemas in `packages/shared-types/src/schemas`. The schemas are intended to be imported by both the frontend and backend, so validation rules can be defined once instead of duplicated across the two applications. The TypeScript types can be inferred from those schemas and shared from the same package.
+
+For example, `UserPayloadSchema` is defined in `packages/shared-types/src/schemas/user.schema.ts` and exported from the `@repo/shared-types` package entry point:
+
+```ts
+import { UserPayloadSchema } from "@repo/shared-types";
+
+const user = UserPayloadSchema.parse(value);
+```
+
+This template does **not** use `class-validator` or `class-transformer`. `drizzle-zod` is present in the backend dependencies for possible Drizzle schema integration, but it is not required by the current shared Zod schema setup. Keep this starter simple and extend the validation approach as your application needs grow.
 
 ### Tooling
 
-* npm workspaces
-* Turborepo
+- npm workspaces
+- Turborepo
 
 ---
 
@@ -113,11 +132,11 @@ Those decisions are left to the user.
 
 You need:
 
-* Node.js (LTS recommended)
-* npm (v7+ for workspaces)
-* A Google Cloud project
-* Google OAuth credentials
-* A NeonDB account and PostgreSQL database
+- Node.js (LTS recommended)
+- npm (v7+ for workspaces)
+- A Google Cloud project
+- Google OAuth credentials
+- A NeonDB account and PostgreSQL database
 
 ---
 
@@ -149,8 +168,8 @@ apps/
 
 Use the example files as the source of truth for required environment variables:
 
-* Backend example: [`apps/backend/.env.example`](apps/backend/.env.example)
-* Frontend example: [`apps/frontend/.env.example`](apps/frontend/.env.example)
+- Backend example: [`apps/backend/.env.example`](apps/backend/.env.example)
+- Frontend example: [`apps/frontend/.env.example`](apps/frontend/.env.example)
 
 Copy each example file to `.env` before starting the application.
 
@@ -245,8 +264,8 @@ If the application is deployed later, add the appropriate production origin as w
 
 Google provides:
 
-* Client ID
-* Client Secret
+- Client ID
+- Client Secret
 
 The **Client ID** is safe to use in the frontend and is also required by the backend.
 
@@ -377,14 +396,14 @@ npm run dev
 
 This uses Turbo to:
 
-* Start the NestJS backend
-* Start the Vite frontend
-* Stream logs with app prefixes
+- Start the NestJS backend
+- Start the Vite frontend
+- Stream logs with app prefixes
 
 ### Default Ports
 
-* Backend: `http://localhost:3000`
-* Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Frontend: `http://localhost:5173`
 
 Make sure the frontend URL matches the URL configured in:
 
@@ -433,10 +452,10 @@ Google is responsible for authenticating the user.
 
 The backend is responsible for:
 
-* Verifying the Google authentication credential
-* Establishing trust in the authenticated Google account
-* Issuing the application's JWT
-* Authenticating subsequent API requests
+- Verifying the Google authentication credential
+- Establishing trust in the authenticated Google account
+- Issuing the application's JWT
+- Authenticating subsequent API requests
 
 This keeps the frontend and backend independently deployable while still providing a clear authentication boundary.
 
@@ -474,9 +493,9 @@ The NeonDB connection string should also be treated as confidential because it c
 
 Even with authentication included:
 
-* Frontend and backend are **not tightly coupled**
-* They can be deployed independently
-* Shared packages are optional and can evolve as the project grows
-* API communication remains explicit
+- Frontend and backend are **not tightly coupled**
+- They can be deployed independently
+- Shared packages are optional and can evolve as the project grows
+- API communication remains explicit
 
 Authentication establishes **trust**, not architectural dependency.
