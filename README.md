@@ -1,3 +1,4 @@
+
 # NestJS + React + Vite + Tailwind + Zod + Turbo (with Google Auth)
 
 This repository is a **basic full-stack monorepo starter** using **npm workspaces** and **Turborepo** to manage a React frontend and a NestJS backend in a single repository. It is intended to give you a simple setup to get started, not a fully featured or production-ready application.
@@ -56,7 +57,9 @@ Those decisions are left to the user.
 .
 ├── apps/
 │   ├── backend/          # NestJS backend (Google OAuth + JWT + PostgreSQL/NeonDB)
+│   │   └── .env.example  # Backend environment variable reference
 │   └── frontend/         # React + Vite + Tailwind (Google OAuth)
+│       └── .env.example  # Frontend environment variable reference
 ├── packages/
 │   └── shared-types/     # @repo/shared-types - shared TypeScript types for frontend/backend
 │       └── src/
@@ -156,58 +159,29 @@ Do not run `npm install` inside individual apps.
 
 ## Environment Variables
 
-The repository includes example environment files for both applications:
+The frontend and backend each have their own environment configuration. The example files in the repository are the **source of truth** for the required variables and their names:
 
-```text
-apps/
-├── backend/
-│   └── .env.example
-└── frontend/
-    └── .env.example
-```
+- **Backend:** [`apps/backend/.env.example`](apps/backend/.env.example)
+- **Frontend:** [`apps/frontend/.env.example`](apps/frontend/.env.example)
 
-Use the example files as the source of truth for required environment variables:
-
-- Backend example: [`apps/backend/.env.example`](apps/backend/.env.example)
-- Frontend example: [`apps/frontend/.env.example`](apps/frontend/.env.example)
-
-Copy each example file to `.env` before starting the application.
-
-### Backend
+From the repository root, copy both examples to local `.env` files:
 
 ```bash
 cp apps/backend/.env.example apps/backend/.env
-```
-
-The backend environment variables should include:
-
-```env
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES=604800000
-PORT=3000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-
-GOOGLE_OAUTH_CLIENT_ID=your_google_oauth_client_id_here
-GOOGLE_OAUTH_CLIENT_SECRET=your_google_oauth_client_secret_here
-
-NEON_DB_URL=your_neon_db_url_here
-```
-
-### Frontend
-
-```bash
 cp apps/frontend/.env.example apps/frontend/.env
 ```
 
-The frontend should contain the backend URL and Google OAuth client ID:
+Then open each `.env` file and replace the example values with your own configuration. Use the respective example file when adding or updating variables; this README intentionally does not duplicate their contents.
 
-```env
-VITE_BACKEND_URL=http://localhost:3000
-VITE_GOOGLE_OAUTH_CLIENT_ID=your_google_oauth_client_id_here
-```
+**Important configuration notes:**
 
-Because Vite exposes variables prefixed with `VITE_` to browser code, **never put the Google OAuth client secret in the frontend `.env` file**.
+- The Google OAuth Client ID must be the same in the frontend and backend (`VITE_GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_ID`, respectively).
+- The Google OAuth Client Secret (`GOOGLE_OAUTH_CLIENT_SECRET`) belongs **only** in the backend environment.
+- The backend's `NEON_DB_URL` must be the PostgreSQL connection string from your Neon project.
+- The backend's `FRONTEND_URL` should match the origin where the React app is running; the frontend's `VITE_BACKEND_URL` should point to the NestJS backend.
+- Generate a strong, unpredictable value for the backend's `JWT_SECRET` rather than reusing a placeholder.
+
+Because Vite exposes variables prefixed with `VITE_` to browser code, **never store secrets in frontend `VITE_` variables**. Keep local `.env` files out of version control.
 
 ---
 
@@ -262,29 +236,12 @@ If the application is deployed later, add the appropriate production origin as w
 
 ### 4. Configure the Credentials
 
-Google provides:
+Google provides an OAuth **Client ID** and **Client Secret**. Add them to the appropriate local environment files, using the repository examples as a reference:
 
-- Client ID
-- Client Secret
+- **Backend:** [`apps/backend/.env.example`](apps/backend/.env.example) — configure `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET`.
+- **Frontend:** [`apps/frontend/.env.example`](apps/frontend/.env.example) — configure `VITE_GOOGLE_OAUTH_CLIENT_ID`.
 
-The **Client ID** is safe to use in the frontend and is also required by the backend.
-
-The **Client Secret is confidential** and must only be available to the backend.
-
-### Backend
-
-```env
-GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
-```
-
-### Frontend
-
-```env
-VITE_GOOGLE_OAUTH_CLIENT_ID=your_google_oauth_client_id_here
-```
-
-The same Google OAuth Client ID should be used in both applications.
+Use the **same Client ID** in both applications. The Client ID can be exposed to the browser, but the **Client Secret must remain on the backend**.
 
 ---
 
@@ -302,41 +259,13 @@ Create a new PostgreSQL project for the application.
 
 ### 2. Create or Select a Database
 
-After creating the Neon project, select the PostgreSQL database associated with the project.
+After creating the Neon project, select the PostgreSQL database associated with the project. Neon will provide a PostgreSQL connection string containing the database connection details and credentials.
 
-Neon provides a PostgreSQL connection string for the database.
+### 3. Configure the Backend Connection
 
-It will generally look similar to:
+Copy the connection string from your Neon project and assign it to `NEON_DB_URL` in `apps/backend/.env`. Refer to [`apps/backend/.env.example`](apps/backend/.env.example) for the variable name and the rest of the backend configuration.
 
-```text
-postgresql://username:password@host/database?sslmode=require
-```
-
-The exact connection string will be provided by Neon.
-
----
-
-### 3. Add the Connection String to the Backend
-
-Open:
-
-```text
-apps/backend/.env
-```
-
-and set:
-
-```env
-NEON_DB_URL=your_neon_db_url_here
-```
-
-For example:
-
-```env
-NEON_DB_URL=postgresql://username:password@your-host.neon.tech/database?sslmode=require
-```
-
-Use the connection string provided by **your Neon project** rather than the example above.
+Treat this connection string as a **secret** because it contains database credentials. Do not commit it to the repository.
 
 ---
 
@@ -405,13 +334,7 @@ This uses Turbo to:
 - Backend: `http://localhost:3000`
 - Frontend: `http://localhost:5173`
 
-Make sure the frontend URL matches the URL configured in:
-
-```env
-FRONTEND_URL=http://localhost:5173
-```
-
-and the Google OAuth client's authorized JavaScript origins.
+Make sure the backend's `FRONTEND_URL` matches the frontend's actual origin and the Google OAuth client's authorized JavaScript origins. If you change the default ports, also update `VITE_BACKEND_URL` in the frontend environment to point to the correct backend URL. See the respective `.env.example` files for configuration details.
 
 ---
 
@@ -463,29 +386,14 @@ This keeps the frontend and backend independently deployable while still providi
 
 ## Environment Variable Security
 
-Do **not** commit local `.env` files.
+Commit the example files so other developers know which variables to configure, but **do not commit your local `.env` files**. Ensure `.gitignore` excludes local environment files without excluding the `.env.example` files.
 
-The repository should contain:
+- The **Google OAuth Client ID** is public configuration and can be used by the frontend.
+- The **Google OAuth Client Secret** and **JWT secret** must remain private to the backend.
+- The **NeonDB connection string** contains database credentials and must remain private to the backend.
+- Any frontend variable prefixed with `VITE_` is exposed to browser code; never put secrets there.
 
-```text
-.env.example
-```
-
-while local secrets should remain in:
-
-```text
-.env
-```
-
-Make sure `.gitignore` excludes local environment files.
-
-### OAuth Client ID vs Client Secret
-
-The Google OAuth **Client ID is not considered a secret** and is expected to be used by the browser.
-
-The **Client Secret is confidential** and should only be available to the backend.
-
-The NeonDB connection string should also be treated as confidential because it contains database credentials.
+If a credential is accidentally committed or exposed, rotate it through the corresponding provider.
 
 ---
 
