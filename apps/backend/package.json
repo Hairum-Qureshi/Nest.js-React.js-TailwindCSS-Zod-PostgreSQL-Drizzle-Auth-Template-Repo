@@ -34,6 +34,7 @@
     "@repo/shared-types": "*",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
     "google-auth-library": "^9.15.1",
     "nestjs-zod": "^5.5.0",
     "passport": "^0.7.0",
