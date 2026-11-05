@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Res,
-  UseGuards,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 import { CurrentUser } from '../decorators/currentUser.decorator';
@@ -20,7 +12,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('google/sign-in')
-  @UsePipes(new ValidationPipe())
   async googleAuth(
     @BearerToken() accessToken: string,
     @Res({ passthrough: true }) res: express.Response,
