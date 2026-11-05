@@ -274,8 +274,8 @@ The **Client Secret is confidential** and must only be available to the backend.
 ### Backend
 
 ```env
-GOOGLE_OAUTH_CLIENT_ID=your_google_oauth_client_id_here
-GOOGLE_OAUTH_CLIENT_SECRET=your_google_oauth_client_secret_here
+GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
 ```
 
 ### Frontend
@@ -333,7 +333,7 @@ NEON_DB_URL=your_neon_db_url_here
 For example:
 
 ```env
-NEON_DB_URL=postgresql://username:password@ep-example.us-east-2.aws.neon.tech/freelance_dev?sslmode=require
+NEON_DB_URL=postgresql://username:password@your-host.neon.tech/database?sslmode=require
 ```
 
 Use the connection string provided by **your Neon project** rather than the example above.
